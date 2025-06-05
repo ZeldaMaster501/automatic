@@ -1,6 +1,10 @@
 const appStartTime = performance.now();
 
 async function preloadImages() {
+  if (/Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|BlackBerry|webOS|mobile/i.test(navigator.userAgent)) {
+    log('preloadImages: skip on mobile');
+    return true;
+  }
   const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   const imagePromises = [];
   const num = Math.floor(9.99 * Math.random());
@@ -45,13 +49,17 @@ async function createSplash() {
       <div id="motd" class="motd""></div>
     </div>`;
   document.body.insertAdjacentHTML('beforeend', splash);
-  const ok = await preloadImages();
+  const useImages = !(/Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|BlackBerry|webOS|mobile/i.test(navigator.userAgent));
+  let ok = true;
+  if (useImages) ok = await preloadImages();
   if (!ok) {
     removeSplash();
     return;
   }
-  const imgEl = `<div id="spash-img" class="splash-img" alt="logo" style="background-image: url(file=html/logo-bg-${dark ? 'dark' : 'light'}.jpg), url(file=html/logo-bg-${num}.jpg); background-blend-mode: ${dark ? 'multiply' : 'lighten'}"></div>`;
-  document.getElementById('splash').insertAdjacentHTML('afterbegin', imgEl);
+  if (useImages) {
+    const imgEl = `<div id="spash-img" class="splash-img" alt="logo" style="background-image: url(file=html/logo-bg-${dark ? 'dark' : 'light'}.jpg), url(file=html/logo-bg-${num}.jpg); background-blend-mode: ${dark ? 'multiply' : 'lighten'}"></div>`;
+    document.getElementById('splash').insertAdjacentHTML('afterbegin', imgEl);
+  }
   fetch(`${window.api}/motd`)
     .then((res) => res.text())
     .then((text) => {
